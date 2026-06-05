@@ -25,6 +25,11 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @GetMapping("/thread")
+    public ResponseEntity<String> thread() {
+        return ResponseEntity.ok(Thread.currentThread().toString());
+    }
+
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductCreateRequest request) {
         ProductResponse response = productService.createProduct(request);
