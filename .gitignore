@@ -1,0 +1,25 @@
+# Gradle build outputs
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# IntelliJ IDEA files
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse files
+.classpath
+.project
+.settings/
+bin/
+
+# macOS files
+.DS_Store
+
+# Temporary files and logs
+*.log
+tmp/
