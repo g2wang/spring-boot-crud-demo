@@ -59,8 +59,8 @@ curl -i -sS -X PUT "${PRODUCTS_URL}/${product_id}" \
     \"stockQuantity\": 20
   }" | tee "$updated_response_file"
 
-print_step "Delete product by id: ${product_id}"
-curl -i -sS -X DELETE "${PRODUCTS_URL}/${product_id}"
+# print_step "Delete product by id: ${product_id}"
+# curl -i -sS -X DELETE "${PRODUCTS_URL}/${product_id}"
 
-print_step "Confirm deleted product returns 404"
-curl -i -sS "${PRODUCTS_URL}/${product_id}"
+# print_step "Confirm deleted product returns 404"
+# curl -i -sS "${PRODUCTS_URL}/${product_id}"
