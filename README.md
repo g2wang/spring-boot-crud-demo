@@ -136,3 +136,284 @@ The test coverage includes:
 - Standard RFC 7807 response formatting.
 - Location header validation on creation.
 - Transaction rollback safety.
+
+---
+
+## Notes on `spring.jpa.hibernate.ddl-auto`
+
+In Spring Boot, the property:
+
+```properties
+spring.jpa.hibernate.ddl-auto=<value>
+```
+
+controls how Hibernate handles the **database schema (DDL = Data Definition Language)** when your application starts.
+
+It tells Hibernate whether it should create, update, validate, or ignore database tables based on your JPA entity classes.
+
+---
+
+## Common Values
+
+### 1. `none`
+
+```properties
+spring.jpa.hibernate.ddl-auto=none
+```
+
+Hibernate does nothing to the database schema.
+
+* No table creation
+* No updates
+* No validation
+
+Use when:
+
+* Database schema is managed manually
+* Using migration tools such as Flyway or Liquibase
+
+---
+
+### 2. `validate`
+
+```properties
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+Hibernate checks that:
+
+* Tables exist
+* Columns match entity definitions
+
+If something doesn't match, application startup fails.
+
+Example:
+
+```java
+@Entity
+public class User {
+    @Id
+    private Long id;
+
+    private String name;
+}
+```
+
+If the `name` column is missing in the database:
+
+```
+Schema-validation: missing column [name]
+```
+
+Use when:
+
+* Production environments
+* Database is managed externally
+* You want safety checks
+
+---
+
+### 3. `update`
+
+```properties
+spring.jpa.hibernate.ddl-auto=update
+```
+
+Hibernate automatically updates the schema to match entities.
+
+Example:
+
+Initial entity:
+
+```java
+@Entity
+public class User {
+    @Id
+    private Long id;
+}
+```
+
+Table:
+
+```sql
+CREATE TABLE user (
+    id BIGINT PRIMARY KEY
+);
+```
+
+Later you add:
+
+```java
+private String email;
+```
+
+On startup Hibernate executes something similar to:
+
+```sql
+ALTER TABLE user
+ADD COLUMN email VARCHAR(255);
+```
+
+Advantages:
+
+* Convenient during development
+
+Disadvantages:
+
+* Can produce unexpected schema changes
+* Doesn't handle complex migrations well
+
+Use when:
+
+* Local development
+* Prototyping
+
+---
+
+### 4. `create`
+
+```properties
+spring.jpa.hibernate.ddl-auto=create
+```
+
+Hibernate:
+
+1. Drops existing tables
+2. Creates new tables
+
+every time the application starts.
+
+Example:
+
+```text
+Startup
+ ├─ DROP TABLE user
+ └─ CREATE TABLE user
+```
+
+All existing data is lost.
+
+Use when:
+
+* Temporary test databases
+* Learning/demo projects
+
+Avoid in production.
+
+---
+
+### 5. `create-drop`
+
+```properties
+spring.jpa.hibernate.ddl-auto=create-drop
+```
+
+Hibernate:
+
+* Creates schema at startup
+* Drops schema when application shuts down
+
+Useful for:
+
+* Unit tests
+* Integration tests
+* In-memory databases like H2 Database
+
+---
+
+## Example
+
+Given this entity:
+
+```java
+@Entity
+@Table(name = "customers")
+public class Customer {
+
+    @Id
+    private Long id;
+
+    private String name;
+
+    private String email;
+}
+```
+
+With:
+
+```properties
+spring.jpa.hibernate.ddl-auto=create
+```
+
+Hibernate generates something similar to:
+
+```sql
+CREATE TABLE customers (
+    id BIGINT NOT NULL,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    PRIMARY KEY (id)
+);
+```
+
+---
+
+## Typical Environment Configuration
+
+### Local Development
+
+```properties
+spring.jpa.hibernate.ddl-auto=update
+```
+
+or
+
+```properties
+spring.jpa.hibernate.ddl-auto=create-drop
+```
+
+---
+
+### Testing
+
+```properties
+spring.jpa.hibernate.ddl-auto=create-drop
+```
+
+---
+
+### Production
+
+```properties
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+or
+
+```properties
+spring.jpa.hibernate.ddl-auto=none
+```
+
+along with a migration tool such as Flyway or Liquibase.
+
+---
+
+## Recommendation
+
+For modern Spring Boot applications:
+
+| Environment       | Recommended Setting           |
+| ----------------- | ----------------------------- |
+| Development       | `update`                      |
+| Automated Tests   | `create-drop`                 |
+| Production        | `validate` or `none`          |
+| Schema Migrations | Flyway/Liquibase + `validate` |
+
+A common production setup is:
+
+```properties
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+and all schema changes are managed through versioned migration scripts in Flyway or Liquibase. This gives predictable, auditable database changes and avoids accidental schema modifications by Hibernate.
+
